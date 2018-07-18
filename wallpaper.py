@@ -7,7 +7,7 @@ if __name__ == '__main__':
     else:
         print('update cookies ！')
         loginurl = 'https://anime-pictures.net/login/submit'
-        logindata = {'login': 'jarvan', 'password': '55223636', 'time_zone': 'Asia/Shanghai'}
+        logindata = {'login': 'xxx', 'password': 'xxx', 'time_zone': 'Asia/Shanghai'}
         srequest.update_cookies(loginurl, logindata)
 
     # 获取首页信息
