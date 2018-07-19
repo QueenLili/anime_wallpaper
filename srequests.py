@@ -21,7 +21,7 @@ class SrequestsError(Exception):
         return self.errorinfo
 
 
-class Srequests():
+class Srequests:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
     }
@@ -45,11 +45,12 @@ class Srequests():
         self.header['Content-Type'] = m.content_type
         rs = self.session.post(loginurl, data=m,
                                headers=self.header)
-        if rs.status_code == 200:
+        if rs.status_code == 200 and '"success":true' in rs.text:
             # save cookie
+            print(rs.text)
             self.session.cookies.save()
         else:
-            raise SrequestsError('update cookies failed !')
+            raise SrequestsError('login error, update cookies failed !')
 
 
 if __name__ == '__main__':
