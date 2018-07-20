@@ -8,7 +8,7 @@
 """
 from http import cookiejar
 
-import requests
+import grequests
 from requests_toolbelt import MultipartEncoder
 
 
@@ -28,13 +28,14 @@ class Srequests:
 
     def __init__(self):
         self.header = Srequests.headers
-        self.session = requests.Session()
+        self.session = grequests.Session()
         self.session.cookies = cookiejar.LWPCookieJar(filename='Cookies')
 
     def check_cookies(self):
         try:
             # load Cookies file
             self.session.cookies.load(ignore_discard=True)
+            print(self.session.cookies)
             return True
         except:
             return False
@@ -52,6 +53,9 @@ class Srequests:
         else:
             raise SrequestsError('login error, update cookies failed !')
 
+    def close(self):
+        self.session.close()
 
 if __name__ == '__main__':
-    pass
+    s = Srequests()
+    s.close()
