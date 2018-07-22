@@ -26,16 +26,30 @@ class Gallery(object):
     def get_con(self, func):
         data_path = self.db
 
-        def sql_exc():
+        def sql_exc(self):
             con = sqlite3.connect(data_path)
             con.text_factory = str
             con.row_factory = dict_factory
             cur = con.cursor()
-            func(cur)
+            func(self, cur)
+            con.commit()
             cur.close()
             con.close()
 
         return sql_exc
+
+    @get_con
+    def create_table(self, cur):
+        cur.execute('''CREATE TABLE COMPANY
+               (ID INT PRIMARY KEY     NOT NULL,
+               NAME           TEXT    NOT NULL,
+               AGE            INT     NOT NULL,
+               ADDRESS        CHAR(50),
+               SALARY         REAL);''')
+
+
+    def save_picture_info(self):
+        pass
 
     def random_picture(self):
         # 从除了不喜欢的图片中随机选取一张图片
@@ -67,4 +81,5 @@ class Gallery(object):
 
 
 if __name__ == '__main__':
-    pass
+    g = Gallery()
+    g.create_table()
