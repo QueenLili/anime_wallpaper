@@ -20,41 +20,48 @@ def dict_factory(cursor, row):
 
 
 class Gallery(object):
+    db = 'gallery.db'
+
     def __init__(self):
-        self.db = 'gallery.sqlite3'
+        self.create_table()
 
-    def get_con(self, func):
-        data_path = self.db
+    def create_table(self):
+        conn = sqlite3.connect(Gallery.db)
+        with conn:
+            conn.execute('''CREATE TABLE IF NOT EXISTS  gallery
+                       (ID               INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                       url               TEXT UNIQUE,
+                       file_name         TEXT,
+                       file_path         TEXT,
+                       file_exist        CHAR(1),
+                       islike            CHAR(1),
+                       file_size         CHAR(20),
+                       resolution_ratio  CHAR(20),
+                       release_date      CHAR(20),
+                       create_date       CHAR(20));''')
+            print("table created")
 
-        def sql_exc(self):
-            con = sqlite3.connect(data_path)
-            con.text_factory = str
-            con.row_factory = dict_factory
-            cur = con.cursor()
-            func(self, cur)
-            con.commit()
-            cur.close()
-            con.close()
-
-        return sql_exc
-
-    @get_con
-    def create_table(self, cur):
-        cur.execute('''CREATE TABLE COMPANY
-               (ID INT PRIMARY KEY     NOT NULL,
-               NAME           TEXT    NOT NULL,
-               AGE            INT     NOT NULL,
-               ADDRESS        CHAR(50),
-               SALARY         REAL);''')
-
-
-    def save_picture_info(self):
-        pass
+    def save_picture_info(self, pic: Picture):
+        try:
+            conn = sqlite3.connect(Gallery.db)
+            with conn:
+                conn.execute('''INSERT INTO gallery (url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date) \
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);''',
+                             (pic.url, pic.file_size, pic.resolution_ratio, pic.release_date,
+                              pic.file_name, pic.file_path, pic.file_exist, pic.islike, pic.create_date))
+                conn.execute('''create index islike_index on gallery (islike);''')
+        except sqlite3.IntegrityError as e:
+            print(e)
 
     def random_picture(self):
         # 从除了不喜欢的图片中随机选取一张图片
         '''SELECT * FROM 表名 ORDER BY RANDOM() limit 1'''
-        pass
+        conn = sqlite3.connect(Gallery.db)
+        with conn:
+            result = conn.execute(
+                '''SELECT url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date FROM gallery WHERE islike!="0" ORDER BY RANDOM() limit 1''')
+            for row in result:
+                return Picture(*row)
 
     def mark_like_tag(self, pic: Picture, tag: bool):
         # '1':like '0':unlike '':no tag
@@ -82,4 +89,9 @@ class Gallery(object):
 
 if __name__ == '__main__':
     g = Gallery()
-    g.create_table()
+    a = Picture('http://www.xxx.com/asdf.jpg', '2.9MB', '1920x1080', '6/14/18, 3:49 PM')
+    print(a)
+    g.save_picture_info(a)
+    pic = g.random_picture()
+    print(pic)
+
