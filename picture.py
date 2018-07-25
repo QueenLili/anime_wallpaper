@@ -42,8 +42,8 @@ class Picture(object):
             self.create_date = create_date
 
     def __str__(self):
-        return 'url: %s, file_name: %s, file_path: %s, file_size: %s, like: %s, resolution_ratio: %s, release_date: %s, create_date: %s' % (
-            self.url, self.file_name, self.file_path, self.file_size, self.islike, self.resolution_ratio,
+        return 'url: %s, file_name: %s, file_path: %s, file_size: %s, file_exist: %s, islike: %s, resolution_ratio: %s, release_date: %s, create_date: %s' % (
+            self.url, self.file_name, self.file_path, self.file_size, self.file_exist, self.islike, self.resolution_ratio,
             self.release_date, self.create_date)
 
 

@@ -44,6 +44,10 @@ def get_picture_info(text):
 
 
 if __name__ == '__main__':
+    # 创建图片文件夹
+    if not os.path.exists(Picture.DOWNLOAD_DIR):
+        os.mkdir(Picture.DOWNLOAD_DIR)
+    # exit()
     srequest = Srequests()
     if srequest.check_cookies():
         pass
