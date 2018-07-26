@@ -113,7 +113,6 @@ def picture_spider():
         else:
             print(r_data.url + '详情页面打开失败。')
 
-    # print(details_urls)
     srequest.close()
 
 
@@ -164,10 +163,11 @@ if __name__ == '__main__':
     # 创建图片文件夹
     if not os.path.exists(Picture.DOWNLOAD_DIR):
         os.mkdir(Picture.DOWNLOAD_DIR)
-    # exit()
+    # 爬虫线程
     t_spider = Thread(target=spider_thread)
     t_spider.start()
+    # 预准备壁纸线程
     t_spare = Thread(target=prepare_wallpapers)
     t_spare.start()
-
-    random_set_wallpaper(30)
+    # 随机换壁纸
+    random_set_wallpaper(CHANGE_WALLPER_INTERVAL)

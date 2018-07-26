@@ -54,6 +54,7 @@ class Srequests:
     def close(self):
         self.session.close()
 
+
 if __name__ == '__main__':
     s = Srequests()
     s.close()
