@@ -12,7 +12,8 @@ import time
 class Picture(object):
     DOWNLOAD_DIR = 'Gallery'
 
-    def __init__(self, url, file_size, resolution_ratio, release_date, file_name=None, file_path=None, file_exist=None, islike=None, create_date=None):
+    def __init__(self, url, file_size, resolution_ratio, release_date, file_name=None, file_path=None, file_exist=None,
+                 islike=None, create_date=None):
         self.url = url
         self.file_size = file_size
         self.resolution_ratio = resolution_ratio
@@ -43,7 +44,8 @@ class Picture(object):
 
     def __str__(self):
         return 'url: %s, file_name: %s, file_path: %s, file_size: %s, file_exist: %s, islike: %s, resolution_ratio: %s, release_date: %s, create_date: %s' % (
-            self.url, self.file_name, self.file_path, self.file_size, self.file_exist, self.islike, self.resolution_ratio,
+            self.url, self.file_name, self.file_path, self.file_size, self.file_exist, self.islike,
+            self.resolution_ratio,
             self.release_date, self.create_date)
 
 

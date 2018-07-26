@@ -1,7 +1,5 @@
-# encoding: utf-8
-
 """
-@Author: Mr. Li
+@Author: Jayce
 @Software: PyCharm
 @FileName: srequests.py
 @CreateTime: 2018/7/18 23:59
