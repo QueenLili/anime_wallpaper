@@ -7,9 +7,14 @@
 
 import os
 import sqlite3
+import time
 import traceback
+import urllib
+from sys import stdout
+from urllib.request import urlretrieve
 
 import requests
+from PIL import Image
 
 from picture import Picture
 
@@ -54,9 +59,9 @@ def save_picture_info(pic: Picture):
                          (pic.url, pic.file_size, pic.resolution_ratio, pic.release_date,
                           pic.file_name, pic.file_path, pic.file_exist, pic.islike, pic.create_date))
             conn.commit()
-            print('saved...')
+            print('入库成功。')
     except sqlite3.IntegrityError as e:
-        print('已存在。')
+        print('入库失败，已存在。')
 
 
 def get_pictures_count():
@@ -76,19 +81,64 @@ def del_picture(pic: Picture):
         traceback.print_exc()
 
 
+def human_readable_size(number_bytes):
+    for x in ['bytes', 'KB', 'MB']:
+        if number_bytes < 1024.0:
+            return "%3.2f %s" % (number_bytes, x)
+        number_bytes /= 1024.0
+
+
+def print_download_status(block_count, block_size, total_size):
+    global start_time
+    total_sz = total_size
+    total_size = human_readable_size(total_size)
+    written_size = human_readable_size(min(block_count * block_size, total_sz))
+    if block_count == 0:
+        start_time = time.time()
+        return
+    percent = int(block_count * block_size * 100 / total_sz)
+    duration = time.time() - start_time
+    if duration == 0:
+        duration = 1
+    speed = human_readable_size((block_count * block_size) / duration)
+    # Adding space padding at the end to ensure we overwrite the whole line
+    stdout.write("\r%s of %s | %d percent | %0.2fs passed | %s/s " % (
+        written_size, total_size, min(100, percent), duration, speed))
+    stdout.write("|%s%s|  " % ('█' * int(percent / 2), ' ' * (50 - int(percent / 2))))
+    stdout.flush()
+
+
 def download_picture(pic: Picture):
     if os.path.exists(pic.file_path) and pic.file_exist == '1':
         return True
     try:
-        data = requests.get(pic.url, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'}).content
-    except Exception as e:
-        print(e)
+        urlretrieve(pic.url, pic.file_path, print_download_status)
+        print('URL retrieved')
+        picData = Image.open(pic.file_path)
+        print('Image opened')
+        picData.save(pic.file_path, 'BMP')
+        print('Saving ...')
+        mark_downloaded_tag(pic, '1')
+        return True
+    except urllib.error.HTTPError as e:
+        print('HTTPError: %s. Exiting' % (str(e)))
         return False
-    with open(pic.file_path, 'wb') as handle:
-        handle.write(data)
-    mark_downloaded_tag(pic, '1')
-    return True
+
+    except urllib.error.URLError as e:
+        print('URLError: %s. Exiting' % (str(e)))
+        os.remove(pic.file_path)
+        return False
+
+    except ConnectionAbortedError as e:
+        print('ConnectionAbortedError: %s. Exiting' % (str(e)))
+        os.remove(pic.file_path)
+        return False
+
+    except Exception as e:
+        print('Some error occurred: %s. Exiting' % (str(e)))
+        if os.path.isfile(pic.file_path):
+            os.remove(pic.file_path)
+        return False
 
 
 class Gallery(object):

@@ -64,7 +64,6 @@ def get_picture_info(text):
 
 # 爬取图片
 def picture_spider():
-    Gallery()
     srequest = Srequests()
     if srequest.check_cookies():
         pass
@@ -98,20 +97,20 @@ def picture_spider():
                    "&ext_jpg=jpg&ext_png=png&lang=en" % (x, search_tag) for x in range(1, int(page_count) + 1)]
     reqs = (grequests.get(url, headers=Srequests.headers, session=srequest.session) for url in search_urls)
     for r_data in grequests.imap(reqs, size=REQUEST_THREAD_NUMBER):
-        print(r_data)
         if r_data.status_code == 200:
+            print('搜索页成功：' + r_data.url)
             details_urls.extend(get_details_urls(r_data.text))
         else:
-            print(r_data.url + '该页打开失败。')
+            print('搜索页失败：' + r_data.url)
 
     # 图片详情页
     reqs = (grequests.get(url, headers=Srequests.headers, session=srequest.session) for url in details_urls)
     for r_data in grequests.imap(reqs, size=REQUEST_THREAD_NUMBER):
-        print(r_data)
         if r_data.status_code == 200:
+            print('详情页成功：' + r_data.url)
             save_picture_info(Picture(*get_picture_info(r_data.text)))
         else:
-            print(r_data.url + '详情页面打开失败。')
+            print('详情页失败：' + r_data.url)
 
     srequest.close()
 
@@ -126,10 +125,10 @@ def spider_thread():
 # 预备壁纸
 def prepare_wallpapers():
     while True:
-        print(SPARE_PICTURES)
+        print('当前预备图片个数：%d' % len(SPARE_PICTURES))
         while len(SPARE_PICTURES) < SPARE_COUNT:
             pic = random_picture()
-            if pic.file_exist != '1':
+            if pic and pic.file_exist != '1':
                 if download_picture(pic):
                     SPARE_PICTURES.append(pic)
         time.sleep(1)
@@ -139,7 +138,9 @@ def prepare_wallpapers():
 def random_set_wallpaper(time_seg):
     while True:
         if SPARE_PICTURES:
+            print('更换壁纸...')
             pic = SPARE_PICTURES[0]
+            print(os.path.abspath(pic.file_path))
             set_wallpaper(os.path.abspath(pic.file_path))
             SPARE_PICTURES.pop(0)
             time.sleep(time_seg)
@@ -163,6 +164,8 @@ if __name__ == '__main__':
     # 创建图片文件夹
     if not os.path.exists(Picture.DOWNLOAD_DIR):
         os.mkdir(Picture.DOWNLOAD_DIR)
+    # 初始化图片库
+    Gallery()
     # 爬虫线程
     t_spider = Thread(target=spider_thread)
     t_spider.start()
