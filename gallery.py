@@ -122,21 +122,25 @@ def download_picture(pic: Picture):
         return True
     except urllib.error.HTTPError as e:
         print('HTTPError: %s. Exiting' % (str(e)))
+        if os.path.exists(pic.file_path):
+            os.remove(pic.file_path)
         return False
 
     except urllib.error.URLError as e:
         print('URLError: %s. Exiting' % (str(e)))
-        os.remove(pic.file_path)
+        if os.path.exists(pic.file_path):
+            os.remove(pic.file_path)
         return False
 
     except ConnectionAbortedError as e:
         print('ConnectionAbortedError: %s. Exiting' % (str(e)))
-        os.remove(pic.file_path)
+        if os.path.exists(pic.file_path):
+            os.remove(pic.file_path)
         return False
 
     except Exception as e:
         print('Some error occurred: %s. Exiting' % (str(e)))
-        if os.path.isfile(pic.file_path):
+        if os.path.exists(pic.file_path):
             os.remove(pic.file_path)
         return False
 
