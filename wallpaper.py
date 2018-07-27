@@ -5,9 +5,9 @@
 @CreateTime: 2018/7/19 16:13
 """
 
-import time
 import win32api
 import win32gui
+from queue import Queue
 from threading import Thread
 from urllib.parse import urljoin
 
@@ -25,17 +25,16 @@ HOST = 'https://anime-pictures.net'
 REQUEST_THREAD_NUMBER = 5
 # 爬取时间间隔
 SPIDER_TIME_INTERVAL = 60 * 60 * 3  # 3小时
-# 预准备图片列表
-SPARE_PICTURES = []
 # 预准备图片个数
 SPARE_COUNT = 20
+# 预准备图片队列
+SPARE_PICTURES = Queue(SPARE_COUNT)  # 指定队列大小
 # 更换壁纸频率
 CHANGE_WALLPER_INTERVAL = 60 * 1  # 1分钟
 
 
 # 获取图片详情url
 def get_details_urls(text):
-    # 详情
     html = etree.HTML(text)
     details_urls = html.xpath('//*[@id="posts"]/div[2]/span[*]/a/@href')
     return [urljoin(HOST, _) for _ in details_urls]
@@ -125,27 +124,21 @@ def spider_thread():
 # 预备壁纸
 def prepare_wallpapers():
     while True:
-        print('当前预备图片个数：%d' % len(SPARE_PICTURES))
-        while len(SPARE_PICTURES) < SPARE_COUNT:
-            pic = random_picture()
-            if pic and pic.file_exist != '1':
-                if download_picture(pic):
-                    SPARE_PICTURES.append(pic)
-        time.sleep(1)
+        print('当前预备图片个数：%d' % SPARE_PICTURES.qsize())
+        pic = random_picture()
+        if pic and pic.file_exist != '1':
+            if download_picture(pic):
+                SPARE_PICTURES.put(pic)
 
 
 # 随机设置壁纸
-def random_set_wallpaper(time_seg):
+def random_set_wallpaper():
     while True:
-        if SPARE_PICTURES:
-            print('更换壁纸...')
-            pic = SPARE_PICTURES[0]
-            print(os.path.abspath(pic.file_path))
-            set_wallpaper(os.path.abspath(pic.file_path))
-            SPARE_PICTURES.pop(0)
-            time.sleep(time_seg)
-        else:
-            time.sleep(1)
+        pic = SPARE_PICTURES.get()
+        print('更换壁纸...')
+        print(os.path.abspath(pic.file_path))
+        set_wallpaper(os.path.abspath(pic.file_path))
+        time.sleep(CHANGE_WALLPER_INTERVAL)
 
 
 # 设置壁纸
@@ -173,4 +166,4 @@ if __name__ == '__main__':
     t_spare = Thread(target=prepare_wallpapers)
     t_spare.start()
     # 随机换壁纸
-    random_set_wallpaper(CHANGE_WALLPER_INTERVAL)
+    random_set_wallpaper()

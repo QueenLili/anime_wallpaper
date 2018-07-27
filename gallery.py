@@ -9,11 +9,10 @@ import os
 import sqlite3
 import time
 import traceback
-import urllib
 from sys import stdout
+from urllib import error
 from urllib.request import urlretrieve
 
-import requests
 from PIL import Image
 
 from picture import Picture
@@ -41,7 +40,6 @@ def mark_like_tag(pic: Picture, tag: str):
 
 def random_picture():
     # 从除了不喜欢的图片中随机选取一张图片
-    '''SELECT * FROM 表名 ORDER BY RANDOM() limit 1'''
     conn = sqlite3.connect(Gallery.DB)
     with conn:
         result = conn.execute(
@@ -65,7 +63,6 @@ def save_picture_info(pic: Picture):
 
 
 def get_pictures_count():
-    '''SELECT count(*) FROM gallery;'''
     conn = sqlite3.connect(Gallery.DB)
     with conn:
         result = conn.execute('''SELECT count(*) FROM gallery;''')
@@ -113,20 +110,17 @@ def download_picture(pic: Picture):
         return True
     try:
         urlretrieve(pic.url, pic.file_path, print_download_status)
-        print('URL retrieved')
-        picData = Image.open(pic.file_path)
-        print('Image opened')
-        picData.save(pic.file_path, 'BMP')
-        print('Saving ...')
+        pic_data = Image.open(pic.file_path)
+        pic_data.save(pic.file_path, 'BMP')
         mark_downloaded_tag(pic, '1')
         return True
-    except urllib.error.HTTPError as e:
+    except error.HTTPError as e:
         print('HTTPError: %s. Exiting' % (str(e)))
         if os.path.exists(pic.file_path):
             os.remove(pic.file_path)
         return False
 
-    except urllib.error.URLError as e:
+    except error.URLError as e:
         print('URLError: %s. Exiting' % (str(e)))
         if os.path.exists(pic.file_path):
             os.remove(pic.file_path)
