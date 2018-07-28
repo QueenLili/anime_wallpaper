@@ -8,6 +8,7 @@
 import win32api
 import win32gui
 from queue import Queue
+from threading import Lock
 from threading import Thread
 from urllib.parse import urljoin
 
@@ -19,25 +20,33 @@ from gallery import *
 from picture import Picture
 from srequests import Srequests
 
-# 图片网站
-HOST = 'https://anime-pictures.net'
-# 爬取网络请求并发数
-REQUEST_THREAD_NUMBER = 5
-# 爬取时间间隔
-SPIDER_TIME_INTERVAL = 60 * 60 * 3  # 3小时
-# 预准备图片个数
-SPARE_COUNT = 20
-# 预准备图片队列
-SPARE_PICTURES = Queue(SPARE_COUNT)  # 指定队列大小
-# 更换壁纸频率
-CHANGE_WALLPER_INTERVAL = 60 * 1  # 1分钟
+
+class Wallpaper:
+    # 图片网站
+    HOST = 'https://anime-pictures.net'
+    # 爬取网络请求并发数
+    REQUEST_THREAD_NUMBER = 5
+    # 爬取时间间隔
+    SPIDER_TIME_INTERVAL = 60 * 60 * 3  # 3小时
+    # 预准备图片个数
+    SPARE_COUNT = 20
+    # 预准备图片队列
+    SPARE_PICTURES = Queue(SPARE_COUNT)  # 指定队列大小
+    # 界面显示自动图片队列
+    VIEW_AUTO_PICTURES = Queue()
+    # 界面显示手动图片队列
+    VIEW_HAND_PICTURES = Queue()
+    # 更换壁纸频率
+    CHANGE_WALLPER_INTERVAL = 10  # 60秒
+    # 更换图片线程锁
+    LOCK = Lock()
 
 
 # 获取图片详情url
 def get_details_urls(text):
     html = etree.HTML(text)
     details_urls = html.xpath('//*[@id="posts"]/div[2]/span[*]/a/@href')
-    return [urljoin(HOST, _) for _ in details_urls]
+    return [urljoin(Wallpaper.HOST, _) for _ in details_urls]
 
 
 # 获取搜索结果页码
@@ -57,7 +66,7 @@ def get_picture_info(text):
     resolution_ratio_xpath = '//*[@id="cont"]/div[1]/div[1]/a[2]/text()'
     file_size_xpath = '//*[@id="cont"]/div[1]/div[1]/text()[15]'
     url_xpath = '//*[@id="rating"]/a/@href'
-    return [urljoin(HOST, html.xpath(url_xpath)[0]), html.xpath(file_size_xpath)[0].strip(),
+    return [urljoin(Wallpaper.HOST, html.xpath(url_xpath)[0]), html.xpath(file_size_xpath)[0].strip(),
             html.xpath(resolution_ratio_xpath)[0], html.xpath(release_date_xpath)[0].strip()]
 
 
@@ -85,7 +94,8 @@ def picture_spider():
     # search_url = "https://anime-pictures.net/pictures/view_posts/0?search_tag=%s&aspect=16:9&order_by=date&ldate=%d" \
     #              "&ext_jpg=jpg&ext_png=png&lang=en" % (search_tag, update_date)
 
-    search_url = "https://anime-pictures.net/pictures/view_posts/0?search_tag=%s&res_x=1024&res_y=768&res_x_n=1&res_y_n=1&aspect=16:9&order_by=date&ldate=%d&small_prev=1&ext_jpg=jpg&ext_png=png&lang=en" % (search_tag, update_date)
+    search_url = "https://anime-pictures.net/pictures/view_posts/0?search_tag=%s&res_x=1024&res_y=768&res_x_n=1&res_y_n=1&aspect=16:9&order_by=date&ldate=%d&small_prev=1&ext_jpg=jpg&ext_png=png&lang=en" % (
+        search_tag, update_date)
 
     resp = srequest.session.get(search_url, headers=Srequests.headers).text
     # print(Srequests.headers)
@@ -94,14 +104,12 @@ def picture_spider():
 
     page_count = get_page_count(resp)
 
-    # 搜索结果
-    # search_urls = ["https://anime-pictures.net/pictures/view_posts/%d?search_tag=%s&aspect=16:9&order_by=date&ldate=0" \
-    #                "&ext_jpg=jpg&ext_png=png&lang=en" % (x, search_tag) for x in range(1, int(page_count) + 1)]
-
-    search_urls = ["https://anime-pictures.net/pictures/view_posts/%d?search_tag=%s&res_x=1024&res_y=768&res_x_n=1&res_y_n=1&aspect=16:9&order_by=date&ldate=%d&small_prev=1&ext_jpg=jpg&ext_png=png&lang=en" % (x, search_tag, update_date) for x in range(1, int(page_count) + 1)]
+    search_urls = [
+        "https://anime-pictures.net/pictures/view_posts/%d?search_tag=%s&res_x=1024&res_y=768&res_x_n=1&res_y_n=1&aspect=16:9&order_by=date&ldate=%d&small_prev=1&ext_jpg=jpg&ext_png=png&lang=en" % (
+            x, search_tag, update_date) for x in range(1, int(page_count) + 1)]
 
     reqs = (grequests.get(url, headers=Srequests.headers, session=srequest.session) for url in search_urls)
-    for r_data in grequests.imap(reqs, size=REQUEST_THREAD_NUMBER):
+    for r_data in grequests.imap(reqs, size=Wallpaper.REQUEST_THREAD_NUMBER):
         if r_data.status_code == 200:
             print('搜索页成功：' + r_data.url)
             details_urls.extend(get_details_urls(r_data.text))
@@ -110,7 +118,7 @@ def picture_spider():
 
     # 图片详情页
     reqs = (grequests.get(url, headers=Srequests.headers, session=srequest.session) for url in details_urls)
-    for r_data in grequests.imap(reqs, size=REQUEST_THREAD_NUMBER):
+    for r_data in grequests.imap(reqs, size=Wallpaper.REQUEST_THREAD_NUMBER):
         if r_data.status_code == 200:
             print('详情页成功：' + r_data.url)
             save_picture_info(Picture(*get_picture_info(r_data.text)))
@@ -124,30 +132,43 @@ def picture_spider():
 def spider_thread():
     while True:
         picture_spider()
-        time.sleep(SPIDER_TIME_INTERVAL)
+        time.sleep(Wallpaper.SPIDER_TIME_INTERVAL)
 
 
 # 预备壁纸
 def prepare_wallpapers():
     while True:
-        print('当前预备图片个数：%d' % SPARE_PICTURES.qsize())
+        print('当前预备图片个数：%d' % Wallpaper.SPARE_PICTURES.qsize())
         pic = random_picture()
         if pic:
-            if pic.file_exist != '1':
+            if pic.file_exist == '1':
+                Wallpaper.SPARE_PICTURES.put(pic)
+            else:
                 if download_picture(pic):
-                    SPARE_PICTURES.put(pic)
+                    Wallpaper.SPARE_PICTURES.put(pic)
         else:
             time.sleep(1)
 
 
+def random_set_wallpaper(hand_set=False):
+    Wallpaper.LOCK.acquire()
+    pic = Wallpaper.SPARE_PICTURES.get()
+    print('更换壁纸...')
+    print(os.path.abspath(pic.file_path))
+    set_wallpaper(os.path.abspath(pic.file_path))
+    if hand_set:
+        Wallpaper.VIEW_HAND_PICTURES.put(pic)
+        # time.sleep(Wallpaper.CHANGE_WALLPER_INTERVAL)
+    else:
+        Wallpaper.VIEW_AUTO_PICTURES.put(pic)
+    Wallpaper.LOCK.release()
+
+
 # 随机设置壁纸
-def random_set_wallpaper():
+def set_wallpaper_thread():
     while True:
-        pic = SPARE_PICTURES.get()
-        print('更换壁纸...')
-        print(os.path.abspath(pic.file_path))
-        set_wallpaper(os.path.abspath(pic.file_path))
-        time.sleep(CHANGE_WALLPER_INTERVAL)
+        random_set_wallpaper()
+        time.sleep(Wallpaper.CHANGE_WALLPER_INTERVAL)
 
 
 # 设置壁纸
@@ -175,4 +196,6 @@ if __name__ == '__main__':
     t_spare = Thread(target=prepare_wallpapers)
     t_spare.start()
     # 随机换壁纸
-    random_set_wallpaper()
+    t_wallpaper = Thread(target=set_wallpaper_thread)
+    t_wallpaper.start()
+    t_wallpaper.join()

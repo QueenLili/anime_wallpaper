@@ -25,7 +25,6 @@ def mark_downloaded_tag(pic: Picture, tag: str):
         conn.execute(
             '''UPDATE gallery SET file_exist = ? WHERE url = ?''', (tag, pic.url))
         conn.commit()
-    pic.file_exist = tag
 
 
 def mark_like_tag(pic: Picture, tag: str):
@@ -35,7 +34,7 @@ def mark_like_tag(pic: Picture, tag: str):
         conn.execute(
             '''UPDATE gallery SET islike = ? WHERE url = ?''', (tag, pic.url))
         conn.commit()
-    pic.islike = tag
+    print('添加tag------------------------')
 
 
 def random_picture():
@@ -44,6 +43,7 @@ def random_picture():
     with conn:
         result = conn.execute(
             '''SELECT url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date FROM gallery WHERE islike!="0" ORDER BY RANDOM() limit 1''')
+        # result = conn.execute('''SELECT url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date FROM gallery WHERE islike!="0" AND file_exist="1" ORDER BY RANDOM() limit 1''')
         for row in result:
             return Picture(*row)
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         'https://anime-pictures.net/pictures/get_image/278381-1920x1080-berry%26%2339%3Bs-morikubo+yuna-suzuhira+hiro-long+hair-blush-highres.png',
         '2.9MB', '1920x1080', '6/14/18, 3:49 PM')
     print(a)
-    save_picture_info(a)
+    # save_picture_info(a)
     pic = random_picture()
     print(pic, '==============================')
     download_picture(pic)
