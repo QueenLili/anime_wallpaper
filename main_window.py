@@ -8,7 +8,7 @@ from wallpaper import *
 
 class ControlView:
     w_box = 600  # 期望图像显示的大小（窗口大小）
-    h_box = 520
+    h_box = 510
     LOCK = Lock()
 
     def __init__(self, win, pic=None):
@@ -25,7 +25,7 @@ class ControlView:
         # 图片详情
         self.pic_info_text = tkinter.Text(main_window, spacing1=15, width=65,
                                           height=ControlView.h_box - self.pic_label_height,
-                                          bg='DeepSkyBlue')
+                                          bg='black', fg='DeepSkyBlue')
         self.pic_info_text.pack(side=tkinter.LEFT)
 
         # 壁纸切换时间选择
