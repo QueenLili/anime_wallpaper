@@ -73,7 +73,7 @@ def picture_spider():
         srequest.update_cookies(loginurl, logindata)
 
     # 搜索图片
-    taglist = ['girl', 'long hair', 'breasts', 'blush', 'single', 'light erotic']
+    taglist = ['girl', 'long hair', 'breasts', 'blush', 'light erotic']
     search_tag = '||'.join(taglist)
 
     # update_date 0：任何时候 1：上周 2：过去一个月 3：过去的一天
@@ -82,8 +82,11 @@ def picture_spider():
     else:
         update_date = 2
 
-    search_url = "https://anime-pictures.net/pictures/view_posts/0?search_tag=%s&aspect=16:9&order_by=date&ldate=%d" \
-                 "&ext_jpg=jpg&ext_png=png&lang=en" % (search_tag, update_date)
+    # search_url = "https://anime-pictures.net/pictures/view_posts/0?search_tag=%s&aspect=16:9&order_by=date&ldate=%d" \
+    #              "&ext_jpg=jpg&ext_png=png&lang=en" % (search_tag, update_date)
+
+    search_url = "https://anime-pictures.net/pictures/view_posts/0?search_tag=%s&res_x=1024&res_y=768&res_x_n=1&res_y_n=1&aspect=16:9&order_by=date&ldate=%d&small_prev=1&ext_jpg=jpg&ext_png=png&lang=en" % (search_tag, update_date)
+
     resp = srequest.session.get(search_url, headers=Srequests.headers).text
     # print(Srequests.headers)
     details_urls = []
@@ -92,8 +95,11 @@ def picture_spider():
     page_count = get_page_count(resp)
 
     # 搜索结果
-    search_urls = ["https://anime-pictures.net/pictures/view_posts/%d?search_tag=%s&aspect=16:9&order_by=date&ldate=0" \
-                   "&ext_jpg=jpg&ext_png=png&lang=en" % (x, search_tag) for x in range(1, int(page_count) + 1)]
+    # search_urls = ["https://anime-pictures.net/pictures/view_posts/%d?search_tag=%s&aspect=16:9&order_by=date&ldate=0" \
+    #                "&ext_jpg=jpg&ext_png=png&lang=en" % (x, search_tag) for x in range(1, int(page_count) + 1)]
+
+    search_urls = ["https://anime-pictures.net/pictures/view_posts/%d?search_tag=%s&res_x=1024&res_y=768&res_x_n=1&res_y_n=1&aspect=16:9&order_by=date&ldate=%d&small_prev=1&ext_jpg=jpg&ext_png=png&lang=en" % (x, search_tag, update_date) for x in range(1, int(page_count) + 1)]
+
     reqs = (grequests.get(url, headers=Srequests.headers, session=srequest.session) for url in search_urls)
     for r_data in grequests.imap(reqs, size=REQUEST_THREAD_NUMBER):
         if r_data.status_code == 200:
@@ -126,9 +132,12 @@ def prepare_wallpapers():
     while True:
         print('当前预备图片个数：%d' % SPARE_PICTURES.qsize())
         pic = random_picture()
-        if pic and pic.file_exist != '1':
-            if download_picture(pic):
-                SPARE_PICTURES.put(pic)
+        if pic:
+            if pic.file_exist != '1':
+                if download_picture(pic):
+                    SPARE_PICTURES.put(pic)
+        else:
+            time.sleep(1)
 
 
 # 随机设置壁纸
