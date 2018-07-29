@@ -29,7 +29,7 @@ class ControlView:
         self.pic_info_text.pack(side=tkinter.LEFT)
 
         # 壁纸切换时间选择
-        self.change_lable = tkinter.Label(main_window, text='切换壁纸间隔', width=35, bg='GreenYellow')
+        self.change_lable = tkinter.Label(main_window, text='自动切换壁纸间隔', width=35, bg='GreenYellow')
         self.change_lable.pack()
 
         self.change_com = ttk.Combobox(main_window)
@@ -104,8 +104,10 @@ class ControlView:
         return ImageTk.PhotoImage(pil_image_resized)
 
     def select_time(self, event):
-        print(self.change_com.get())
-        Wallpaper.CHANGE_WALLPER_INTERVAL = self.change_time_conversion(select=self.change_com.get())
+        interval = self.change_time_conversion(select=self.change_com.get())
+        print(interval)
+        Wallpaper.CHANGE_WALLPER_INTERVAL = interval
+        set_change_wallper_interval(interval)
 
     def hand_change(self):
         print('手动切换')

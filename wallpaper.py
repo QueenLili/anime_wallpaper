@@ -38,6 +38,7 @@ class Wallpaper:
     VIEW_HAND_PICTURES = Queue()
     # 更换壁纸频率
     CHANGE_WALLPER_INTERVAL = 10  # 60秒
+    CHANGE_WALLPER_INTERVAL = get_change_wallper_interval(CHANGE_WALLPER_INTERVAL)
     # 更换图片线程锁
     LOCK = Lock()
 

@@ -23,7 +23,7 @@ def mark_downloaded_tag(pic: Picture, tag: str):
     conn = sqlite3.connect(Gallery.DB)
     with conn:
         conn.execute(
-            '''UPDATE gallery SET file_exist = ? WHERE url = ?''', (tag, pic.url))
+            "UPDATE gallery SET file_exist = ? WHERE url = ?;", (tag, pic.url))
         conn.commit()
 
 
@@ -32,7 +32,7 @@ def mark_like_tag(pic: Picture, tag: str):
     conn = sqlite3.connect(Gallery.DB)
     with conn:
         conn.execute(
-            '''UPDATE gallery SET islike = ? WHERE url = ?''', (tag, pic.url))
+            "UPDATE gallery SET islike = ? WHERE url = ?;", (tag, pic.url))
         conn.commit()
     print('添加tag------------------------')
 
@@ -42,8 +42,8 @@ def random_picture():
     conn = sqlite3.connect(Gallery.DB)
     with conn:
         result = conn.execute(
-            '''SELECT url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date FROM gallery WHERE islike!="0" ORDER BY RANDOM() limit 1''')
-        # result = conn.execute('''SELECT url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date FROM gallery WHERE islike!="0" AND file_exist="1" ORDER BY RANDOM() limit 1''')
+            "SELECT url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date FROM gallery WHERE islike!='0' ORDER BY RANDOM() limit 1;")
+        # result = conn.execute("SELECT url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date FROM gallery WHERE islike!="0" AND file_exist="1" ORDER BY RANDOM() limit 1")
         for row in result:
             return Picture(*row)
 
@@ -52,8 +52,8 @@ def save_picture_info(pic: Picture):
     try:
         conn = sqlite3.connect(Gallery.DB)
         with conn:
-            conn.execute('''INSERT INTO gallery (url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date) \
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);''',
+            conn.execute("INSERT INTO gallery (url, file_size, resolution_ratio, release_date, file_name, file_path, file_exist, islike, create_date) \
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
                          (pic.url, pic.file_size, pic.resolution_ratio, pic.release_date,
                           pic.file_name, pic.file_path, pic.file_exist, pic.islike, pic.create_date))
             conn.commit()
@@ -65,7 +65,7 @@ def save_picture_info(pic: Picture):
 def get_pictures_count():
     conn = sqlite3.connect(Gallery.DB)
     with conn:
-        result = conn.execute('''SELECT count(*) FROM gallery;''')
+        result = conn.execute("SELECT count(*) FROM gallery;")
         for i in result:
             return i[0]
 
@@ -139,6 +139,22 @@ def download_picture(pic: Picture):
         return False
 
 
+def get_change_wallper_interval(value):
+    conn = sqlite3.connect(Gallery.DB)
+    with conn:
+        result = conn.execute("SELECT value FROM config WHERE option=='change_wallper_interval';")
+        for row in result:
+            return int(row[0])
+        conn.execute("INSERT INTO config (option, value) VALUES (?, ?);", ('change_wallper_interval', str(value)))
+
+
+def set_change_wallper_interval(value):
+    conn = sqlite3.connect(Gallery.DB)
+    with conn:
+        conn.execute("UPDATE config SET value=? WHERE option=?;", (str(value), 'change_wallper_interval'))
+        conn.commit()
+
+
 class Gallery(object):
     DB = 'gallery.db'
 
@@ -148,6 +164,7 @@ class Gallery(object):
     def create_table(self):
         conn = sqlite3.connect(Gallery.DB)
         with conn:
+            # 创建数据表
             conn.execute('''CREATE TABLE IF NOT EXISTS  gallery
                        (ID               INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                        url               TEXT UNIQUE,
@@ -159,21 +176,29 @@ class Gallery(object):
                        resolution_ratio  CHAR(20),
                        release_date      CHAR(20),
                        create_date       CHAR(20));''')
-            conn.execute('''CREATE INDEX IF NOT EXISTS islike_index ON gallery (islike);''')
+            # 创建配置表
+            conn.execute('''CREATE TABLE IF NOT EXISTS  config
+                       (option           CHAR(20),
+                        value            CHAR(50));''')
+            conn.execute("CREATE INDEX IF NOT EXISTS islike_index ON gallery (islike);")
             conn.commit()
 
 
 if __name__ == '__main__':
     g = Gallery()
-    get_pictures_count()
-    a = Picture(
-        'https://anime-pictures.net/pictures/get_image/278381-1920x1080-berry%26%2339%3Bs-morikubo+yuna-suzuhira+hiro-long+hair-blush-highres.png',
-        '2.9MB', '1920x1080', '6/14/18, 3:49 PM')
-    print(a)
-    # save_picture_info(a)
-    pic = random_picture()
-    print(pic, '==============================')
-    download_picture(pic)
-    print(pic)
-    mark_like_tag(pic, '1')
-    print(pic)
+    # get_pictures_count()
+    # a = Picture(
+    #     'https://anime-pictures.net/pictures/get_image/278381-1920x1080-berry%26%2339%3Bs-morikubo+yuna-suzuhira+hiro-long+hair-blush-highres.png',
+    #     '2.9MB', '1920x1080', '6/14/18, 3:49 PM')
+    # print(a)
+    # # save_picture_info(a)
+    # pic = random_picture()
+    # print(pic, '==============================')
+    # download_picture(pic)
+    # print(pic)
+    # mark_like_tag(pic, '1')
+    # print(pic)
+
+    print(get_change_wallper_interval(80))
+    set_change_wallper_interval(222)
+    print(get_change_wallper_interval(70))
