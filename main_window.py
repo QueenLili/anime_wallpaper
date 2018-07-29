@@ -110,7 +110,7 @@ class ControlView:
         set_change_wallper_interval(interval)
 
     def hand_change_thread(self):
-        self.hand_button['text'] = '下载中'
+        self.hand_button['text'] = '下载中...'
         self.hand_button.config(state=tkinter.DISABLED)
         random_set_wallpaper(True)
         self.refresh_view(True)
