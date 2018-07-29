@@ -40,9 +40,9 @@ class ControlView:
         self.change_com.pack()
 
         # 手动切换
-        hand_button = tkinter.Button(main_window, text='手动切换', width=35, bg='ForestGreen',
-                                     command=self.hand_change)
-        hand_button.pack()
+        self.hand_button = tkinter.Button(main_window, text='手动切换', width=35, bg='GreenYellow',
+                                          command=self.hand_change_button)
+        self.hand_button.pack()
 
         # 标记喜欢
         like_rad = tkinter.Radiobutton(main_window, text='喜 欢', variable=self.like_tag, value='1', bg='DeepSkyBlue',
@@ -109,10 +109,18 @@ class ControlView:
         Wallpaper.CHANGE_WALLPER_INTERVAL = interval
         set_change_wallper_interval(interval)
 
-    def hand_change(self):
-        print('手动切换')
+    def hand_change_thread(self):
+        self.hand_button['text'] = '下载中'
+        self.hand_button.config(state=tkinter.DISABLED)
         random_set_wallpaper(True)
         self.refresh_view(True)
+        self.hand_button['text'] = '手动切换'
+        self.hand_button.config(state=tkinter.NORMAL)
+
+    def hand_change_button(self):
+        print('手动切换')
+        t_hand = Thread(target=self.hand_change_thread, daemon=True)
+        t_hand.start()
 
     def set_like_tag(self):
         select_tag = self.like_tag.get()
@@ -150,8 +158,7 @@ if __name__ == '__main__':
     # 创建图片文件夹
     if not os.path.exists(Picture.DOWNLOAD_DIR):
         os.mkdir(Picture.DOWNLOAD_DIR)
-    # 初始化图片库
-    Gallery()
+
     # 爬虫线程
     t_spider = Thread(target=spider_thread, daemon=True)
     t_spider.start()

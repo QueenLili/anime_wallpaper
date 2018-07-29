@@ -20,6 +20,9 @@ from gallery import *
 from picture import Picture
 from srequests import Srequests
 
+# 初始化图片库
+Gallery()
+
 
 class Wallpaper:
     # 图片网站

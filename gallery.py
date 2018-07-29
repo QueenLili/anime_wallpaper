@@ -146,6 +146,8 @@ def get_change_wallper_interval(value):
         for row in result:
             return int(row[0])
         conn.execute("INSERT INTO config (option, value) VALUES (?, ?);", ('change_wallper_interval', str(value)))
+        conn.commit()
+        return value
 
 
 def set_change_wallper_interval(value):
