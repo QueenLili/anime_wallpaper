@@ -8,3 +8,5 @@ Python版本:3.6
 需要安装第三方模块
 
 pip install grequests lxml pywin32 pillow requests-toolbelt
+
+目前使用pyinstaller进行打包时有问题，打包成功不能用，待解决。
