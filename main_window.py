@@ -18,7 +18,7 @@ class ControlView:
         self.like_tag = tkinter.StringVar()
 
         # 显示图片Label
-        self.tk_image = self.pic_data('loading.gif')  # 把PIL图像对象转变为Tkinter的PhotoImage对象  【转换格式，方便在窗口展示】
+        self.tk_image = self.pic_data('pre_pic.jpg')  # 把PIL图像对象转变为Tkinter的PhotoImage对象  【转换格式，方便在窗口展示】
         self.image_lable = tkinter.Label(main_window, image=self.tk_image, height=self.pic_label_height, bg='black')
         self.image_lable.pack(fill=tkinter.X, side=tkinter.TOP)
 
