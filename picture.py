@@ -52,3 +52,5 @@ class Picture(object):
 if __name__ == '__main__':
     a = Picture('http://www.xxx.com/asdf.jpg', '2.9MB', '1920x1080', '6/14/18, 3:49 PM')
     print(a)
+    preinstall_wallpaper = Picture('无', '1.2MB', '1500x844', '无', 'pre_pic.jpg', 'pre_pic.jpg')
+    print(preinstall_wallpaper)
