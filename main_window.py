@@ -159,7 +159,7 @@ if __name__ == '__main__':
     if not os.path.exists(Picture.DOWNLOAD_DIR):
         os.mkdir(Picture.DOWNLOAD_DIR)
     # 预设壁纸
-    preinstall_wallpaper = Picture('无', '1.2MB', '1500x844', '无', 'pre_pic.jpg', 'pre_pic.jpg')
+    preinstall_wallpaper = Picture('无', '1.2MB', '1500x844', '无', 'pre_pic.jpg', '无（预设壁纸）')
     Wallpaper.SPARE_PICTURES.put(preinstall_wallpaper)
     # 爬虫线程
     t_spider = Thread(target=spider_thread, daemon=True)
