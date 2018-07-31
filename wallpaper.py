@@ -145,7 +145,7 @@ def prepare_wallpapers():
         print('当前预备图片个数：%d' % Wallpaper.SPARE_PICTURES.qsize())
         pic = random_picture()
         if pic:
-            if pic.file_exist == '1':
+            if pic.file_exist == '1' and os.path.exists(pic.file_path):
                 Wallpaper.SPARE_PICTURES.put(pic)
             else:
                 if download_picture(pic):
