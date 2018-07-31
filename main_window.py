@@ -164,9 +164,12 @@ if __name__ == '__main__':
     # 爬虫线程
     t_spider = Thread(target=spider_thread, daemon=True)
     t_spider.start()
-    # 预准备壁纸线程
+    # # 预准备壁纸线程 单任务下载
     t_spare = Thread(target=prepare_wallpapers, daemon=True)
     t_spare.start()
+    # 预准备壁纸线程 异步多任务下载（占内存）
+    # t_spare = Thread(target=async_prepare_wallpapers, daemon=True)
+    # t_spare.start()
     # 随机换壁纸
     t_wallpaper = Thread(target=set_wallpaper_thread, daemon=True)
     t_wallpaper.start()

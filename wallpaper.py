@@ -4,7 +4,7 @@
 @ProjectName: anime_wallpaper
 @CreateTime: 2018/7/19 16:13
 """
-
+import asyncio
 import win32api
 import win32gui
 from queue import Queue
@@ -12,6 +12,8 @@ from threading import Lock
 from threading import Thread
 from urllib.parse import urljoin
 
+import aiofiles
+import aiohttp
 import grequests
 import win32con
 from lxml import etree
@@ -44,6 +46,49 @@ class Wallpaper:
     CHANGE_WALLPER_INTERVAL = get_change_wallper_interval(CHANGE_WALLPER_INTERVAL)
     # 更换图片线程锁
     LOCK = Lock()
+    ASYNC_QUEUE = asyncio.Queue(5)
+    LOOP = asyncio.get_event_loop()
+
+
+async def producer(func):
+    while True:
+        item = func()
+        await Wallpaper.ASYNC_QUEUE.put(item)
+        print('Product:', item)
+        await asyncio.sleep(1)
+
+
+async def consumer():
+    while True:
+        item = await Wallpaper.ASYNC_QUEUE.get()
+        print('Consumed', item)
+        if item and os.path.exists(item.file_path) and item.file_exist == '1':
+            Wallpaper.SPARE_PICTURES.put(item)
+            print('已下载')
+            pass
+        else:
+            async with aiohttp.ClientSession() as session:
+                print('开始下载')
+                async with session.get(item.url) as response:
+                    async with aiofiles.open(item.file_path, 'wb') as fd:
+                        while True:
+                            chunk = await response.content.read(1024)
+                            if not chunk:
+                                break
+                            await fd.write(chunk)
+                print('下载完成')
+            pic_data = Image.open(item.file_path)
+            pic_data.save(item.file_path, 'BMP')
+            mark_downloaded_tag(item, '1')
+            Wallpaper.SPARE_PICTURES.put(item)
+
+
+def async_prepare_wallpapers():
+    for _ in range(5):
+        Wallpaper.LOOP.create_task(producer(random_picture))
+    for _ in range(5):
+        Wallpaper.LOOP.create_task(consumer())
+    Wallpaper.LOOP.run_forever()
 
 
 # 获取图片详情url
