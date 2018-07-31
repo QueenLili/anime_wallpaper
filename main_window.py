@@ -159,7 +159,7 @@ if __name__ == '__main__':
     if not os.path.exists(Picture.DOWNLOAD_DIR):
         os.mkdir(Picture.DOWNLOAD_DIR)
     # 预设壁纸
-    preinstall_wallpaper = Picture('无', '1.2MB', '1500x844', '无', 'pre_pic.jpg', '无（预设壁纸）')
+    preinstall_wallpaper = Picture('无', '1.2MB', '1500x844', '无', 'pre_pic.jpg', 'pre_pic.jpg')
     Wallpaper.SPARE_PICTURES.put(preinstall_wallpaper)
     # 爬虫线程
     t_spider = Thread(target=spider_thread, daemon=True)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     # 界面程序 ======================================================
     main_window = tkinter.Tk()  # 创建窗口，必须在ImageTk.PhotoImage()之前！
-    main_window.geometry('%dx%d' % (ControlView.w_box, ControlView.h_box))  ## 规定窗口大小500*500像素
+    main_window.geometry('%dx%d' % (ControlView.w_box, ControlView.h_box))
     main_window.resizable(False, False)  ## 规定窗口不可缩放
 
     # 设置窗口标题
